@@ -1,22 +1,28 @@
-import Container from '../components/container'
-import MoreStories from '../components/more-stories'
-import HeroPost from '../components/hero-post'
-import Intro from '../components/intro'
-import Layout from '../components/layout'
-import { getAllPosts } from '../lib/api'
-import Head from 'next/head'
-import { CMS_NAME } from '../lib/constants'
+import Layout from "../components/layout";
+import Head from "next/head";
+import { CMS_NAME } from "../lib/constants";
+import useSWR from "swr";
+import base64 from "base-64";
 
-export default function Index({ allPosts }) {
-  const heroPost = allPosts[0]
-  const morePosts = allPosts.slice(1)
+export default function Index() {
+  const course = useSWR("/event/intro/0/0/6/1", fetcher);
+  if (!course.data) return <h1>Loading...</h1>;
   return (
     <>
       <Layout>
         <Head>
           <title>Next.js Blog Example with {CMS_NAME}</title>
         </Head>
-        <Container>
+        {course.data.map((d, i) => (
+          <a
+            key={i}
+            className="block mb-3 ml-3"
+            href={`posts/${d.webEvent.slug}`}
+          >
+            {d.webEvent.title}
+          </a>
+        ))}
+        {/* <Container>
           <Intro />
           {heroPost && (
             <HeroPost
@@ -29,23 +35,15 @@ export default function Index({ allPosts }) {
             />
           )}
           {morePosts.length > 0 && <MoreStories posts={morePosts} />}
-        </Container>
+        </Container> */}
       </Layout>
     </>
-  )
+  );
 }
 
-export async function getStaticProps() {
-  const allPosts = getAllPosts([
-    'title',
-    'date',
-    'slug',
-    'author',
-    'coverImage',
-    'excerpt',
-  ])
-
-  return {
-    props: { allPosts },
-  }
-}
+export const fetcher = (url) =>
+  fetch("https://api.onegml.com/v1" + url, {
+    headers: new Headers({
+      Authorization: `Basic ${base64.encode(`onegmlapi:O1n6e0G4M7L`)}`,
+    }),
+  }).then((r) => r.json());
