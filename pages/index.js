@@ -3,17 +3,16 @@ import Head from "next/head";
 import { CMS_NAME } from "../lib/constants";
 import useSWR from "swr";
 import base64 from "base-64";
-
-export default function Index() {
-  const course = useSWR("/event/intro/0/0/6/1", fetcher);
-  if (!course.data) return <h1>Loading...</h1>;
+import axios from "axios";
+export default function Index({ event }) {
+  // if (!course.data) return <h1>Loading...</h1>;
   return (
     <>
       <Layout>
         <Head>
           <title>Next.js Blog Example with {CMS_NAME}</title>
         </Head>
-        {course.data.map((d, i) => (
+        {event.map((d, i) => (
           <a
             key={i}
             className="block mb-3 ml-3"
@@ -40,7 +39,24 @@ export default function Index() {
     </>
   );
 }
+export async function getServerSideProps(context) {
+  try {
+    let fetch = await axios.get(
+      `https://api.onegml.com/v1/event/intro/0/0/6/1`,
+      {
+        auth: {
+          username: "onegmlapi",
+          password: "O1n6e0G4M7L",
+        },
+        //   httpsAgent:agent
+      }
+    );
 
+    return { props: { event: fetch.data } };
+  } catch (error) {
+    return { props: {} };
+  }
+}
 export const fetcher = (url) =>
   fetch("https://api.onegml.com/v1" + url, {
     headers: new Headers({
